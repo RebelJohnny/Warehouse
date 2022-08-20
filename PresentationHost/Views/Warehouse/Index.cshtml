@@ -1,0 +1,160 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Kendo UI Snippet</title>
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="https://kendo.cdn.telerik.com/2022.2.802/js/kendo.all.min.js"></script>
+    <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2022.2.802/styles/kendo.default-v2.min.css"/>
+
+    
+</head>
+<body>
+  
+    <style>html { font: 12px sans-serif; }</style>
+
+    <div id="grid"></div>
+
+    <script>
+       
+        $(document).ready(function () {
+            var dataSource = new kendo.data.DataSource({
+                transport: {
+                    read: {
+                        url: "https://localhost:44393/api/goods/getAll",
+                        dataType: "json"
+                    },
+                    
+                },
+                error: function (e) {
+                    // Handle data operation error.
+                    alert("Status: " + e.status + "; Error message: " + e.errorThrown);
+                },
+                pageSize: 10,
+                batch: false,
+                schema: {
+                    model: {
+                        id: "goodsId",
+                        fields: {
+                            goodsId: { editable: false, nullable: true },
+                            name: { validation: { required: true } },
+                            inventory: { type: "number", validation: { required: true, min: 1} },
+                        }
+                    }
+                }
+            });
+
+            $("#grid").kendoGrid({
+                dataSource: dataSource,
+                pageable: true,
+                toolbar: ["create"],
+                columns: [
+                    { field: "goodsId", title: "GoodsID" },
+                    { field: "name", title: "Name"},
+                    { field: "inventory", title: "Inventory"},
+                    { command: ["edit", "destroy"], title: "&nbsp;", width: "200px" }
+                ],
+                editable: "inline",
+
+
+                save: function(e) {
+         
+
+         if (e.model.id) {
+             Goods = new Object();
+                  
+            // Disable the editor of the "id" column when editing data items
+            Goods.GoodsId = e.model.goodsId;
+            
+            Goods.Name = e.model.name;
+           
+            Goods.Inventory = e.model.inventory;
+            GoodsUpdate(Goods);
+             
+            }
+         else {
+                         
+            GoodsInput = new Object();
+            GoodsInput.name = e.model.name;
+            GoodsInput.Inventory = e.model.inventory;
+
+            GoodsAdd(GoodsInput);
+            //e.model.id = 0;
+            //Student = new Object();
+            //Student.Id = e.model.id;
+
+            //Student.Name = e.model.name;
+            //Student.Surname = e.model.surname;
+            //Student.Age = e.model.age;
+            //studentAdd(Student);
+         }
+     },
+          remove: function(e)
+          {
+               var id = e.model.id.toString();
+               //alert(id);
+               GoodsDelete(id);
+          }
+            });
+        });
+      var Goods = {
+      GoodsId: 0,
+      Name: "",
+      Inventory: 0
+    }
+    var GoodsInput = {
+        Name: "",
+        Inventory: 0
+    }
+    function GoodsAdd(goodsinput) {
+            console.log(goodsinput);
+
+      $.ajax({
+        url: "https://localhost:44328/api/goods",
+        type: 'POST',
+        contentType: "application/json;charset=utf-8",
+        data: JSON.stringify(goodsinput),
+        //error: function (request) {
+        //  handleException(request);
+        //}
+      });
+    }
+    function GoodsUpdate(goods) {
+
+      $.ajax({
+        url: "/api/goods/update",
+        type: 'PUT',
+        contentType: "application/json;charset=utf-8",
+        data: JSON.stringify(goods),
+        //error: function (request) {
+        //  handleException(request);
+        //}
+      });
+    }
+    function GoodsDelete(id) {
+      $.ajax({
+        url: "/api/goods/destroy/"+id,
+        type: 'DELETE',
+        
+        
+        
+        //error: function (request) {
+        //  handleException(request);
+        //}
+      });
+    }
+    // Handle exceptions from AJAX calls
+    function handleException(request) {
+      var msg = "";
+
+      msg += "Code: " + request.status + "\n";
+      msg += "Text: " + request.statusText + "\n";
+      if (request.responseJSON != null) {
+        msg += "Message" + request.responseJSON.Message + "\n";
+      }
+
+      alert(msg);
+    }
+    </script>
+</body>
+</html>
